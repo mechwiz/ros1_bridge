@@ -290,9 +290,10 @@ int main(int argc, char * argv[])
         if (topics[i].hasMember("qos")) {
           printf("Setting up QoS for '%s': ", topic_name.c_str());
           auto qos_settings = qos_from_params(topics[i]["qos"]);
+          bool ros1_pub_latching = (topic_name == "/tf_static");
           printf("\n");
           ros1_bridge::BridgeHandles handles = ros1_bridge::create_bidirectional_bridge(
-            ros1_node, ros2_node, "", type_name, topic_name, queue_size, qos_settings);
+            ros1_node, ros2_node, "", type_name, topic_name, queue_size, qos_settings, ros1_pub_latching);
           all_handles.push_back(handles);
         } else {
           ros1_bridge::BridgeHandles handles = ros1_bridge::create_bidirectional_bridge(
