@@ -254,11 +254,19 @@ void update_bridge(
     bridge.ros1_type_name = ros1_type_name;
     bridge.ros2_type_name = ros2_type_name;
 
+    bool ros1_pub_latching = (topic_name == "/tf_static");
+
+    auto ros2_subscriber_qos = rclcpp::QoS(rclcpp::KeepLast(10));
+    if (topic_name == "/tf_static") {
+      ros2_subscriber_qos.keep_all();
+      ros2_subscriber_qos.transient_local();
+    }
+
     try {
       bridge.bridge_handles = ros1_bridge::create_bridge_from_2_to_1(
         ros2_node, ros1_node,
-        bridge.ros2_type_name, topic_name, 10,
-        bridge.ros1_type_name, topic_name, 10);
+        bridge.ros2_type_name, topic_name, ros2_subscriber_qos,
+        bridge.ros1_type_name, topic_name, 10, ros1_pub_latching);
     } catch (std::runtime_error & e) {
       fprintf(
         stderr,
