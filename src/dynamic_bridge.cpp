@@ -252,11 +252,19 @@ void update_bridge(
     bridge.ros1_type_name = ros1_type_name;
     bridge.ros2_type_name = ros2_type_name;
 
+    auto ros2_subscriber_qos = rclcpp::QoS(rclcpp::KeepLast(10));
+    bool ros1_pub_latching = false;
+    if (topic_name == "/tf_static") {
+      ros1_pub_latching = true;
+      ros2_subscriber_qos.keep_all();
+      ros2_subscriber_qos.transient_local();
+    }
     try {
       bridge.bridge_handles = ros1_bridge::create_bridge_from_2_to_1(
         ros2_node, ros1_node,
-        bridge.ros2_type_name, topic_name, 10,
-        bridge.ros1_type_name, topic_name, 10);
+        bridge.ros2_type_name, topic_name, ros2_subscriber_qos,
+        bridge.ros1_type_name, topic_name, 10,
+        ros1_pub_latching);
     } catch (std::runtime_error & e) {
       fprintf(
         stderr,
@@ -327,10 +335,6 @@ void update_bridge(
     }
   }
 
-  int service_execution_timeout{5};
-  ros1_node.getParamCached(
-    "ros1_bridge/dynamic_bridge/service_execution_timeout", service_execution_timeout);
-
   // create bridges for ros2 services
   for (auto & service : ros2_services) {
     auto & name = service.first;
@@ -343,8 +347,7 @@ void update_bridge(
         "ros2", details.at("package"), details.at("name"));
       if (factory) {
         try {
-          service_bridges_1_to_2[name] = factory->service_bridge_1_to_2(
-            ros1_node, ros2_node, name, service_execution_timeout);
+          service_bridges_1_to_2[name] = factory->service_bridge_1_to_2(ros1_node, ros2_node, name);
           printf("Created 1 to 2 bridge for service %s\n", name.data());
         } catch (std::runtime_error & e) {
           fprintf(stderr, "Failed to created a bridge: %s\n", e.what());
@@ -406,7 +409,7 @@ void get_ros1_service_info(
       transport->close();
     });
   if (!transport->connect(host, port)) {
-    fprintf(stderr, "Failed to connect to %s (%s:%d)\n", name.data(), host.data(), port);
+    fprintf(stderr, "Failed to connect to %s:%d\n", host.data(), port);
     return;
   }
   ros::M_string header_out;

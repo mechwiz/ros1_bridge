@@ -16,7 +16,6 @@
 #define  ROS1_BRIDGE__FACTORY_INTERFACE_HPP_
 
 #include <string>
-#include <vector>
 
 // include ROS 1
 #include "ros/node_handle.h"
@@ -113,32 +112,18 @@ public:
 
   virtual
   void
-  convert_1_to_2(const void * ros1_msg, void * ros2_msg) const = 0;
+  convert_1_to_2(const void * ros1_msg, void * ros2_msg) = 0;
 
   virtual
   void
-  convert_2_to_1(const void * ros2_msg, void * ros1_msg) const = 0;
-
-  virtual
-  bool convert_2_to_1_generic(
-    const rclcpp::SerializedMessage & ros2_msg,
-    std::vector<uint8_t> & ros1_msg) const = 0;
-
-  virtual
-  bool convert_1_to_2_generic(
-    const std::vector<uint8_t> & ros1_msg,
-    rclcpp::SerializedMessage & ros2_msg) const = 0;
-
-  virtual const char * get_ros1_md5sum() const = 0;
-  virtual const char * get_ros1_data_type() const = 0;
-  virtual const char * get_ros1_message_definition() const = 0;
+  convert_2_to_1(const void * ros2_msg, void * ros1_msg) = 0;
 };
 
 class ServiceFactoryInterface
 {
 public:
   virtual ServiceBridge1to2 service_bridge_1_to_2(
-    ros::NodeHandle &, rclcpp::Node::SharedPtr, const std::string &, int) = 0;
+    ros::NodeHandle &, rclcpp::Node::SharedPtr, const std::string &) = 0;
 
   virtual ServiceBridge2to1 service_bridge_2_to_1(
     ros::NodeHandle &, rclcpp::Node::SharedPtr, const std::string &) = 0;
